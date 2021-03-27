@@ -8,15 +8,15 @@ namespace kmeans
         int k;
         int dims;
         int max_iters;
-        int rand_seed; 
+        int rand_seed;
 
-        std::string input_file;
-        float threshold; 
+        char *input_file;
+        float threshold;
 
-        bool print_centroids;
-        bool gpu;
-        bool gpu_shmem;
-        bool kmeans_pp; 
+        bool print_centroids = false;
+        bool gpu = false;
+        bool gpu_shmem = false;
+        bool kmeans_pp = false;
     };
 
     // read input file and return 2d array of vectors
@@ -24,7 +24,7 @@ namespace kmeans
 
 
 
-    
+
 }
 
 
