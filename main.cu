@@ -44,7 +44,6 @@ void print_vec(float *vec, const int dims)
     std::cout << "]" << std::endl;
 }
 
-
 float diff(float *A, float *B, const int dims) 
 {
     float d = 0;
