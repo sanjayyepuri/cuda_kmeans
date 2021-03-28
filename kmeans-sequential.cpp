@@ -70,10 +70,6 @@ namespace kmeans
         // initialize the first centroid scratch area
         copyCentroids(ds, centroids[0]);
 
-        // create a n*k scratch area to store distances
-        // do we need this can we just store the minimum distance
-        float *distances = new float[N * K];
-
         // store the labels for each of the
         int *labels = new int[N];
 
@@ -133,8 +129,6 @@ namespace kmeans
 
         // cleanup 
         delete[] centroids[1];
-        delete[] distances;
-
         return l;
     }
 }
