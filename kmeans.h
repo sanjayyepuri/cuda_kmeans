@@ -1,11 +1,20 @@
 #pragma once
 
 #include <vector>
+#include <chrono>
 
 #define BSTR(b) (b ? "true" : "false")
 #define DEBUG
 
 #define I(r, c, D) (D*r + c)
+
+#define TIME_EXEC(msg, ...) do {                                                \
+    auto __startt = std::chrono::steady_clock::now();                           \
+    __VA_ARGS__                                                                 \
+    auto __endt = std::chrono::steady_clock::now();                             \
+    std::chrono::duration<double> __duration = __endt - __startt;               \
+    std::cout << msg << " " << __duration.count() << " seconds" << std::endl;   \
+} while(0);                                                     
 
 namespace kmeans
 {

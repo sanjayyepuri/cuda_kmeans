@@ -81,50 +81,45 @@ namespace kmeans
             std::cout << "starting iteration: " << iters << std::endl;
 #endif
 
-            int cc = (iters-1) % 2; 
-            int nc = iters % 2;
-
-            zeroBuf(centroids[nc], K * D);
-
-            // Label each point
-            int counts[K] = {0}; // tracks the num points in each cluster
-            for (int x = 0; x < N; ++x)
+            TIME_EXEC("iteration took ",
             {
-                // label each centroid
-                float *x_vec = &ds.vecs[I(x, 0, D)];
-                
-                float min_dist = MAXFLOAT;
-                size_t centroid_id = -1;
+                int cc = (iters-1) % 2; 
+                int nc = iters % 2;
 
-                for (int c = 0; c < K; ++c)
+                zeroBuf(centroids[nc], K * D);
+
+                int counts[K] = {0}; // tracks the num points in each cluster
+                for (int x = 0; x < N; ++x)
                 {
-                    float *centroid = &centroids[cc][I(c, 0, D)];
-                    float dist = distance(centroid, x_vec, D);
+                    // label each point
+                    float *x_vec = &ds.vecs[I(x, 0, D)];
+                    
+                    float min_dist = MAXFLOAT;
+                    size_t centroid_id = -1;
 
-                    if (dist < min_dist) {
-                        min_dist = dist; 
-                        centroid_id = c;
+                    for (int c = 0; c < K; ++c)
+                    {
+                        float *centroid = &centroids[cc][I(c, 0, D)];
+                        float dist = distance(centroid, x_vec, D);
+
+                        if (dist < min_dist) {
+                            min_dist = dist; 
+                            centroid_id = c;
+                        }
                     }
+
+                    labels[x] = centroid_id;
+
+                    // accumulate sums to compute mean 
+                    add(&centroids[nc][I(centroid_id, 0, D)], x_vec, D);
+                    counts[centroid_id]++;
                 }
 
-                labels[x] = centroid_id;
-
-                // accumulate sums to compute mean 
-                add(&centroids[nc][I(centroid_id, 0, D)], x_vec, D);
-                counts[centroid_id]++;
-            }
-#ifdef DEBUG
-            for (int i = 0; i < K; ++i)
-            {
-                std::cout << counts[i] << " ";
-            }
-            std::cout << std::endl;
-#endif
-
-            // compute new centroids
-            for (int r = 0; r < K; ++r)
-                for (int c = 0; c < D; ++c)
-                    centroids[nc][I(r, c, D)] /= (float) counts[r];
+                // compute new centroids
+                for (int r = 0; r < K; ++r)
+                    for (int c = 0; c < D; ++c)
+                        centroids[nc][I(r, c, D)] /= (float) counts[r];
+            })
         }
 
         Labels l;
