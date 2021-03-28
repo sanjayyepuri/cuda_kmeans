@@ -1,17 +1,22 @@
 #pragma once
 
-#include <string>
+#include <vector>
+
+#define BSTR(b) (b ? "true" : "false")
+#define DEBUG
+
+#define I(r, c, D) (D*r + c)
 
 namespace kmeans
 {
-    struct args_t {
-        int k;
-        int dims;
-        int max_iters;
-        int rand_seed;
+    struct Args {
+        int k = 0;
+        int dims = 0;
+        int max_iters = 0;
+        int rand_seed = 0;
 
         char *input_file;
-        float threshold;
+        float threshold = 1e-5;
 
         bool print_centroids = false;
         bool gpu = false;
@@ -19,12 +24,17 @@ namespace kmeans
         bool kmeans_pp = false;
     };
 
-    // read input file and return 2d array of vectors
-    float **parse_input(std::string filename);
+    // store the dataset used for kmeans
+    struct Dataset  {
+        float *vecs;
+        size_t n;
+        size_t k; 
+        size_t dims;
+        std::vector<size_t> init_centroids;
+    };
 
-
-
-
+    // return a dataset initalized with random centroids
+    Dataset buildDataset(Args &options);
 }
 
 
