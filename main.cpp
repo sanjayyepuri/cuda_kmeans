@@ -108,9 +108,5 @@ int main(int argc, char **argv)
     printIntialCentroids(ds);
 #endif 
 
-
-
-
-
     return 0;
 }

@@ -35,6 +35,9 @@ namespace kmeans
 
     // return a dataset initalized with random centroids
     Dataset buildDataset(Args &options);
+
+    // Sequential kmeans implementation
+    void kmeansSequential(const Dataset &ds);
 }
 
 
