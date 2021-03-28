@@ -12,11 +12,11 @@ namespace kmeans
     struct Args {
         int k = 0;
         int dims = 0;
-        int max_iters = 0;
+        int max_iters = 20;
         int rand_seed = 0;
 
         char *input_file;
-        float threshold = 1e-5;
+        float threshold = 1e-10;
 
         bool print_centroids = false;
         bool gpu = false;
@@ -33,11 +33,16 @@ namespace kmeans
         std::vector<size_t> init_centroids;
     };
 
+    struct Labels {
+        float *centroids;
+        int *labels; 
+    };
+
     // return a dataset initalized with random centroids
     Dataset buildDataset(Args &options);
 
     // Sequential kmeans implementation
-    void kmeansSequential(const Dataset &ds);
+    Labels kmeansSequential(const Dataset &ds, const Args &options);
 }
 
 

@@ -68,7 +68,7 @@ void printVectors(kmeans::Dataset &ds)
     }
 }
 
-void printIntialCentroids(kmeans::Dataset &ds)
+void printInitialCentroids(kmeans::Dataset &ds)
 {
     for (int c : ds.init_centroids)
     {
@@ -76,6 +76,17 @@ void printIntialCentroids(kmeans::Dataset &ds)
         for (int i = 0; i < ds.dims; ++i) 
             std::cout << ds.vecs[I(c, i, ds.dims)] << " ";
         std::cout << std::endl;
+    }
+}
+
+void printCentroids(std::ostream &os, const kmeans::Dataset &ds, const kmeans::Labels &ls)
+{
+    for (int c = 0; c < ds.k; ++c)
+    {
+        os << c << " ";
+        for (int i = 0; i < ds.dims; ++i)
+            os << ls.centroids[I(c, i, ds.dims)] << " ";
+        os << std::endl;
     }
 }
 
@@ -105,8 +116,12 @@ int main(int argc, char **argv)
 
 #ifdef DEBUG 
     // printVectors(ds);
-    printIntialCentroids(ds);
+    printInitialCentroids(ds);
 #endif 
 
+    kmeans::Labels ls = kmeans::kmeansSequential(ds, options);
+#ifdef DEBUG
+    printCentroids(std::cout, ds, ls);
+#endif 
     return 0;
 }

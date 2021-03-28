@@ -1,28 +1,140 @@
+#include <math.h>
+#include <cstring>
+#include <iostream>
 
 #include "kmeans.h"
 
-namespace kmeans 
+namespace kmeans
 {
     void copyCentroids(const Dataset &ds, float *centroids)
     {
-        for (size_t c : ds.init_centroids)
+        for (int c = 0; c < ds.init_centroids.size(); ++c)
         {
             for (int i = 0; i < ds.dims; ++i)
             {
-                size_t k = I(c, i, ds.dims);
-                centroids[k] = ds.vecs[k];
+                size_t cid = ds.init_centroids[c];
+                centroids[I(c, i, ds.dims)] = ds.vecs[I(cid, i, ds.dims)];
             }
         }
     }
-
-    void kmeansSequential(const Dataset &ds)
+    
+    // compute the square distance between two vectors 
+    float distance(float *a, float *b, const size_t dims)
     {
-        float *centroids[2];
+        float dist = 0;
+        for (int i = 0; i < dims; ++i)
+            dist += std::pow(a[i] - b[i], 2);
 
-        centroids[0] = new float[ds.n * ds.dims];
-        centroids[1] = new float[ds.n * ds.dims];
+        return dist; 
+    }
+
+    void add(float *a, float *b, const size_t dims)
+    {
+        for (int i = 0; i < dims; ++i)
+            a[i] += b[i];
+    }
+
+    bool convergence(float *o_centroids, float *n_centroids, float threshold, int k, int dims)
+    {
+        int N = k * dims;
+        float dist = distance(o_centroids, n_centroids, N);
+
+        return std::sqrt(dist) <= threshold;
+    }
+
+    inline void zeroBuf(float *v, const size_t dims)
+    {
+        for (int i = 0; i < dims; ++i)
+            v[i] = 0;
+    }
+
+    Labels kmeansSequential(const Dataset &ds, const Args &options)
+    {
+        size_t N = ds.n, D = ds.dims, K = ds.k;
+
+        std::cout << "N: " << N << " D: " << D << " K: " << K << std::endl;
+        
+        float *centroids[2];
+        centroids[0] = new float[K * D];
+        centroids[1] = new float[K * D];
 
         // initialize the first centroid scratch area
+#ifdef DEBUG
+        std::cout << "copying centroids" << std::endl;
+#endif 
+
         copyCentroids(ds, centroids[0]);
-    }    
+
+        // create a n*k scratch area to store distances
+        // do we need this can we just store the minimum distance
+        float *distances = new float[N * K];
+
+        // store the labels for each of the
+        int *labels = new int[N];
+
+        int iters = 0;
+        while (iters++ < options.max_iters 
+            && !convergence(centroids[0], centroids[1], options.threshold, K, D))
+        {
+
+#ifdef DEBUG
+            std::cout << "starting iteration: " << iters << std::endl;
+#endif
+
+            int cc = (iters-1) % 2; 
+            int nc = iters % 2;
+
+            zeroBuf(centroids[nc], K * D);
+
+            // Label each point
+            int counts[K] = {0}; // tracks the num points in each cluster
+            for (int x = 0; x < N; ++x)
+            {
+                // label each centroid
+                float *x_vec = &ds.vecs[I(x, 0, D)];
+                
+                float min_dist = MAXFLOAT;
+                size_t centroid_id = -1;
+
+                for (int c = 0; c < K; ++c)
+                {
+                    float *centroid = &centroids[cc][I(c, 0, D)];
+                    float dist = distance(centroid, x_vec, D);
+
+                    if (dist < min_dist) {
+                        min_dist = dist; 
+                        centroid_id = c;
+                    }
+                }
+
+                labels[x] = centroid_id;
+
+                // accumulate sums to compute mean 
+                add(&centroids[nc][I(centroid_id, 0, D)], x_vec, D);
+                counts[centroid_id]++;
+            }
+#ifdef DEBUG
+            for (int i = 0; i < K; ++i)
+            {
+                std::cout << counts[i] << " ";
+            }
+            std::cout << std::endl;
+#endif
+
+            // compute new centroids
+            for (int r = 0; r < K; ++r)
+                for (int c = 0; c < D; ++c)
+                    centroids[nc][I(r, c, D)] /= (float) counts[r];
+        }
+
+        Labels l;
+        l.centroids = centroids[0]; // 0 and 1 are within a threshold
+        l.labels = labels;
+
+        // cleanup 
+        delete[] centroids[1];
+        delete[] distances;
+
+        return l;
+    }
 }
