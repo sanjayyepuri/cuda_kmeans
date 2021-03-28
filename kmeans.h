@@ -8,12 +8,12 @@
 
 #define I(r, c, D) (D*r + c)
 
-#define TIME_EXEC(msg, ...) do {                                                \
+#define TIME_EXEC(vec, ...) do {                                                \
     auto __startt = std::chrono::steady_clock::now();                           \
     __VA_ARGS__                                                                 \
     auto __endt = std::chrono::steady_clock::now();                             \
     std::chrono::duration<double> __duration = __endt - __startt;               \
-    std::cout << msg << " " << __duration.count() << " seconds" << std::endl;   \
+    vec.push_back(__duration.count() * 1000);                                   \
 } while(0);                                                     
 
 namespace kmeans
@@ -52,6 +52,9 @@ namespace kmeans
 
     // Sequential kmeans implementation
     Labels kmeansSequential(const Dataset &ds, const Args &options);
+
+    // compute average of vector of floats
+    float avgTimeMS(std::vector<double> ms_per_iter);
 }
 
 

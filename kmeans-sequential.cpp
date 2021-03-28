@@ -6,6 +6,17 @@
 
 namespace kmeans
 {
+    float avgTimeMS(std::vector<double> ms_per_iter)
+    {
+        float t = 0;
+        for (float ms : ms_per_iter)
+        {
+            t += ms; 
+        }
+
+        return t / ms_per_iter.size();
+    }
+
     void copyCentroids(const Dataset &ds, float *centroids)
     {
         for (int c = 0; c < ds.init_centroids.size(); ++c)
@@ -52,17 +63,11 @@ namespace kmeans
     {
         size_t N = ds.n, D = ds.dims, K = ds.k;
 
-        std::cout << "N: " << N << " D: " << D << " K: " << K << std::endl;
-        
         float *centroids[2];
         centroids[0] = new float[K * D];
         centroids[1] = new float[K * D];
 
         // initialize the first centroid scratch area
-#ifdef DEBUG
-        std::cout << "copying centroids" << std::endl;
-#endif 
-
         copyCentroids(ds, centroids[0]);
 
         // create a n*k scratch area to store distances
@@ -72,16 +77,13 @@ namespace kmeans
         // store the labels for each of the
         int *labels = new int[N];
 
+        std::vector<double> ms_per_iter;
+
         int iters = 0;
         while (iters++ < options.max_iters 
             && !convergence(centroids[0], centroids[1], options.threshold, K, D))
         {
-
-#ifdef DEBUG
-            std::cout << "starting iteration: " << iters << std::endl;
-#endif
-
-            TIME_EXEC("iteration took ",
+            TIME_EXEC(ms_per_iter,
             {
                 int cc = (iters-1) % 2; 
                 int nc = iters % 2;
@@ -121,6 +123,9 @@ namespace kmeans
                         centroids[nc][I(r, c, D)] /= (float) counts[r];
             })
         }
+
+        float time_per_iter = avgTimeMS(ms_per_iter);
+        printf("%d, %lf\n", (int) ms_per_iter.size(), time_per_iter);
 
         Labels l;
         l.centroids = centroids[0]; // 0 and 1 are within a threshold
