@@ -6,7 +6,6 @@
 
 namespace kmeans
 {
-   
 
     void copyCentroids(const Dataset &ds, float *centroids)
     {
@@ -69,11 +68,11 @@ namespace kmeans
         std::vector<double> ms_per_iter;
 
         int iters = 0;
-        while (iters++ < options.max_iters
+        while (iters++ < options.max_iters 
             && !convergence(centroids[0], centroids[1], options.threshold, K, D))
         {
-            TIME_EXEC(ms_per_iter,{
-                int cc = (iters-1) % 2;
+            TIME_EXEC(ms_per_iter, {
+                int cc = (iters - 1) % 2;
                 int nc = iters % 2;
 
                 zeroBuf(centroids[nc], K * D);
@@ -92,7 +91,8 @@ namespace kmeans
                         float *centroid = &centroids[cc][I(c, 0, D)];
                         float dist = distance(centroid, x_vec, D);
 
-                        if (dist < min_dist) {
+                        if (dist < min_dist)
+                        {
                             min_dist = dist;
                             centroid_id = c;
                         }
@@ -108,7 +108,7 @@ namespace kmeans
                 // compute new centroids
                 for (int r = 0; r < K; ++r)
                     for (int c = 0; c < D; ++c)
-                        centroids[nc][I(r, c, D)] /= (float) counts[r];
+                        centroids[nc][I(r, c, D)] /= (float)counts[r];
             })
         }
 

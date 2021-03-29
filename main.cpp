@@ -111,16 +111,17 @@ int main(int argc, char **argv)
     std::cout << "gpu shared memory: " << BSTR(options.gpu_shmem) << std::endl;
     std::cout << "kmeans++: " << BSTR(options.kmeans_pp) << std::endl;
 #endif 
-    
     kmeans::Dataset ds = kmeans::buildDataset(options); 
 
-#ifdef DEBUG 
-    // printVectors(ds);
-    // printInitialCentroids(ds);
-#endif 
-    kmeans::Labels ls = kmeans::kmeansGPU(ds, options);
+    kmeans::Labels ls; 
+    if (options.gpu || options.gpu_shmem)
+        ls = kmeans::kmeansGPU(ds, options);
+    else 
+        ls = kmeans::kmeansSequential(ds, options);
+
 #ifdef DEBUG
     printCentroids(std::cout, ds, ls);
 #endif 
+
     return 0;
 }
