@@ -53,6 +53,9 @@ namespace kmeans
     // Sequential kmeans implementation
     Labels kmeansSequential(const Dataset &ds, const Args &options);
 
+    // GPU kmeans implementation
+    Labels kmeansGPU(const Dataset &ds, const Args &options);
+
     // compute average of vector of floats
     float avgTimeMS(std::vector<double> ms_per_iter);
 }

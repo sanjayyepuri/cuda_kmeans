@@ -34,8 +34,10 @@ namespace kmeans
     {
         float dist = 0;
         for (int i = 0; i < dims; ++i)
-            dist += std::pow(a[i] - b[i], 2);
-
+        {
+            float diff = a[i] - b[i];
+            dist += diff * diff;
+        }
         return dist; 
     }
 
