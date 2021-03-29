@@ -66,6 +66,7 @@ namespace kmeans
             extern __shared__ float s[];
             float *local_centroids = s;
             float *centroid_scratch = &s[K * D];
+            float *counts_scratch = &centroid_scratch[K * D];
 
             int bid = blockIdx.x, tid = threadIdx.x;
             int cc = (iter - 1) % 2;
@@ -77,16 +78,13 @@ namespace kmeans
                 centroid_scratch[i] = 0;
             }
 
-            __syncthreads();
+            for (int i = tid; i < K; i += blockDim.x)
+                counts_scratch[i] = 0;
 
-            // the vector data is private to a thread within a block
+            __syncthreads();
 
             int x_ind = bid * blockDim.x + tid;
             float *X = &vecs[I(x_ind, 0, D)];
-
-            // for (int i = 0; i < D; ++i) {
-            //     X[i] = vecs[I(x_ind, i, D)];
-            // }
 
             float min_dist = MAXFLOAT;
             int centroid_id = -1;
@@ -102,17 +100,18 @@ namespace kmeans
                     centroid_id = c;
                 }
             }
-
             add(&centroid_scratch[I(centroid_id, 0, D)], X, D);
-            atomicAdd(&counts[centroid_id], 1.0f);
-            labels[x_ind] = centroid_id;
+            atomicAdd(&counts_scratch[centroid_id], 1.0f);
 
             __syncthreads();
 
+            labels[x_ind] = centroid_id;
+
             for (int i = tid; i < K * D; i += blockDim.x)
-            {
                 atomicAdd(&centroids[nc][i], centroid_scratch[i]);
-            }
+
+            for (int i = tid; i < K; i += blockDim.x)
+                atomicAdd(&counts[i], counts_scratch[i]);
         }
 
         __global__ void averageCentroids(float *centroids, float *counts, int D)
@@ -175,7 +174,7 @@ namespace kmeans
                         cuda_counts, cuda_labels,
                         N, K, D);
                 else if (options.gpu_shmem)
-                    kcuda::labelVectorsShared<<<blocks, threads, 2 * sizeof(float) * K * D>>>(
+                    kcuda::labelVectorsShared<<<blocks, threads, sizeof(float) * (2 * D + 1) * K>>>(
                         iter,
                         cuda_dataset, cuda_centroids,
                         cuda_counts, cuda_labels,
