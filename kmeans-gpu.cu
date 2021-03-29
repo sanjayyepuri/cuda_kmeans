@@ -100,7 +100,7 @@ namespace kmeans
         CUDA_ERR(cudaMemcpy(cuda_centroids, centroids, sizeof(float *) * 2,
             cudaMemcpyHostToDevice));
 
-        const size_t N_THREADS = 2048;
+        const size_t N_THREADS = 1024;
 
         std::vector<double> ms_per_iter;
         int iter = 0;
