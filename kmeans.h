@@ -14,7 +14,7 @@
     auto __endt = std::chrono::steady_clock::now();                             \
     std::chrono::duration<double> __duration = __endt - __startt;               \
     vec.push_back(__duration.count() * 1000);                                   \
-} while(0);                                                     
+} while(0);
 
 namespace kmeans
 {
@@ -22,7 +22,7 @@ namespace kmeans
         int k = 0;
         int dims = 0;
         int max_iters = 20;
-        int rand_seed = 0;
+        int rand_seed = 8675309;
 
         char *input_file;
         float threshold = 1e-10;
@@ -37,14 +37,14 @@ namespace kmeans
     struct Dataset  {
         float *vecs;
         size_t n;
-        size_t k; 
+        size_t k;
         size_t dims;
         std::vector<size_t> init_centroids;
     };
 
     struct Labels {
         float *centroids;
-        int *labels; 
+        int *labels;
     };
 
     // return a dataset initalized with random centroids
@@ -58,6 +58,9 @@ namespace kmeans
 
     // compute average of vector of floats
     float avgTimeMS(std::vector<double> ms_per_iter);
+
+    // copy the initial centroids from the dataset
+    void copyCentroids(const Dataset &ds, float *centroids);
 }
 
 

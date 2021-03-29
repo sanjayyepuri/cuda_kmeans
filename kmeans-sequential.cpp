@@ -11,7 +11,7 @@ namespace kmeans
         float t = 0;
         for (float ms : ms_per_iter)
         {
-            t += ms; 
+            t += ms;
         }
 
         return t / ms_per_iter.size();
@@ -28,8 +28,8 @@ namespace kmeans
             }
         }
     }
-    
-    // compute the square distance between two vectors 
+
+    // compute the square distance between two vectors
     float distance(float *a, float *b, const size_t dims)
     {
         float dist = 0;
@@ -38,7 +38,7 @@ namespace kmeans
             float diff = a[i] - b[i];
             dist += diff * diff;
         }
-        return dist; 
+        return dist;
     }
 
     void add(float *a, float *b, const size_t dims)
@@ -72,18 +72,17 @@ namespace kmeans
         // initialize the first centroid scratch area
         copyCentroids(ds, centroids[0]);
 
-        // store the labels for each of the
+        // store the labels for each point
         int *labels = new int[N];
 
         std::vector<double> ms_per_iter;
 
         int iters = 0;
-        while (iters++ < options.max_iters 
+        while (iters++ < options.max_iters
             && !convergence(centroids[0], centroids[1], options.threshold, K, D))
         {
-            TIME_EXEC(ms_per_iter,
-            {
-                int cc = (iters-1) % 2; 
+            TIME_EXEC(ms_per_iter,{
+                int cc = (iters-1) % 2;
                 int nc = iters % 2;
 
                 zeroBuf(centroids[nc], K * D);
@@ -93,7 +92,7 @@ namespace kmeans
                 {
                     // label each point
                     float *x_vec = &ds.vecs[I(x, 0, D)];
-                    
+
                     float min_dist = MAXFLOAT;
                     size_t centroid_id = -1;
 
@@ -103,14 +102,14 @@ namespace kmeans
                         float dist = distance(centroid, x_vec, D);
 
                         if (dist < min_dist) {
-                            min_dist = dist; 
+                            min_dist = dist;
                             centroid_id = c;
                         }
                     }
 
                     labels[x] = centroid_id;
 
-                    // accumulate sums to compute mean 
+                    // accumulate sums to compute mean
                     add(&centroids[nc][I(centroid_id, 0, D)], x_vec, D);
                     counts[centroid_id]++;
                 }
@@ -129,7 +128,7 @@ namespace kmeans
         l.centroids = centroids[0]; // 0 and 1 are within a threshold
         l.labels = labels;
 
-        // cleanup 
+        // cleanup
         delete[] centroids[1];
         return l;
     }
