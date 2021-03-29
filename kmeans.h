@@ -2,6 +2,9 @@
 
 #include <vector>
 #include <chrono>
+#include <iostream>
+
+#include <cuda_runtime.h>
 
 #define BSTR(b) (b ? "true" : "false")
 #define DEBUG
@@ -15,6 +18,17 @@
     std::chrono::duration<double> __duration = __endt - __startt;               \
     vec.push_back(__duration.count() * 1000);                                   \
 } while(0);
+
+
+#define CUDA_ERR(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      printf("GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
 
 namespace kmeans
 {
@@ -57,7 +71,7 @@ namespace kmeans
     Labels kmeansGPU(const Dataset &ds, const Args &options);
 
     // compute average of vector of floats
-    float avgTimeMS(std::vector<double> ms_per_iter);
+    void printTimeMs(std::vector<double> ms_per_iter);
 
     // copy the initial centroids from the dataset
     void copyCentroids(const Dataset &ds, float *centroids);

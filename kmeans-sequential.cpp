@@ -6,16 +6,7 @@
 
 namespace kmeans
 {
-    float avgTimeMS(std::vector<double> ms_per_iter)
-    {
-        float t = 0;
-        for (float ms : ms_per_iter)
-        {
-            t += ms;
-        }
-
-        return t / ms_per_iter.size();
-    }
+   
 
     void copyCentroids(const Dataset &ds, float *centroids)
     {
@@ -121,8 +112,7 @@ namespace kmeans
             })
         }
 
-        float time_per_iter = avgTimeMS(ms_per_iter);
-        printf("%d, %lf\n", (int) ms_per_iter.size(), time_per_iter);
+        printTimeMs(ms_per_iter);
 
         Labels l;
         l.centroids = centroids[0]; // 0 and 1 are within a threshold

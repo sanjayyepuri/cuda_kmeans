@@ -116,10 +116,9 @@ int main(int argc, char **argv)
 
 #ifdef DEBUG 
     // printVectors(ds);
-    printInitialCentroids(ds);
+    // printInitialCentroids(ds);
 #endif 
-
-    kmeans::Labels ls = kmeans::kmeansSequential(ds, options);
+    kmeans::Labels ls = kmeans::kmeansGPU(ds, options);
 #ifdef DEBUG
     printCentroids(std::cout, ds, ls);
 #endif 

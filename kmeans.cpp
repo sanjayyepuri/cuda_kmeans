@@ -55,5 +55,16 @@ namespace kmeans {
 
         return ds;
     }
+    
+    void printTimeMs(std::vector<double> ms_per_iter)
+    {
+        float t = 0;
+        for (float ms : ms_per_iter)
+        {
+            t += ms;
+        }
+
+        printf("%d, %lf\n", (int) ms_per_iter.size(), t / ms_per_iter.size());
+    }
 }
 
