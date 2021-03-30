@@ -198,9 +198,8 @@ namespace kmeans
                 float conv;
                 CUDA_ERR(cudaMemcpy(&conv, cuda_conv, sizeof(float), cudaMemcpyDeviceToHost));
 
-                if (std::sqrt(conv) <= options.threshold){
+                if (std::sqrt(conv) <= options.threshold)
                     goto done; 
-                }
 
                 // zero second buffer and counts
                 CUDA_ERR(cudaMemset(centroids[iter % 2], 0, centroid_size));
