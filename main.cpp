@@ -10,50 +10,51 @@ void parseCmdArgs(kmeans::Args &opts, int argc, char **argv)
     int c;
     while ((c = getopt(argc, argv, "k:d:i:m:t:cs:gfp")) != -1)
     {
-        switch (c) {
-            case 'k':
-                opts.k = std::stoi(optarg);
-                break;
+        switch (c)
+        {
+        case 'k':
+            opts.k = std::stoi(optarg);
+            break;
 
-            case 'd':
-                opts.dims = std::stoi(optarg);
-                break;
+        case 'd':
+            opts.dims = std::stoi(optarg);
+            break;
 
-            case 'i':
-                opts.input_file = optarg;
-                break;
+        case 'i':
+            opts.input_file = optarg;
+            break;
 
-            case 'm':
-                opts.max_iters = std::stoi(optarg);
-                break;
+        case 'm':
+            opts.max_iters = std::stoi(optarg);
+            break;
 
-            case 't':
-                opts.threshold = std::stof(optarg);
-                break;
+        case 't':
+            opts.threshold = std::stof(optarg);
+            break;
 
-            case 'c':
-                opts.print_centroids = true;
-                break;
+        case 'c':
+            opts.print_centroids = true;
+            break;
 
-            case 's':
-                opts.rand_seed = std::stoi(optarg);
-                break;
+        case 's':
+            opts.rand_seed = std::stoi(optarg);
+            break;
 
-            case 'g':
-                opts.gpu = true;
-                break;
+        case 'g':
+            opts.gpu = true;
+            break;
 
-            case 'f':
-                opts.gpu_shmem = true;
-                break;
+        case 'f':
+            opts.gpu_shmem = true;
+            break;
 
-            case 'p':
-                opts.kmeans_pp = true;
-                break;
+        case 'p':
+            opts.kmeans_pp = true;
+            break;
 
-            default:
-                abort();
-                break;
+        default:
+            abort();
+            break;
         }
     }
 }
@@ -73,7 +74,7 @@ void printInitialCentroids(kmeans::Dataset &ds)
     for (int c : ds.init_centroids)
     {
         std::cout << c << " ";
-        for (int i = 0; i < ds.dims; ++i) 
+        for (int i = 0; i < ds.dims; ++i)
             std::cout << ds.vecs[I(c, i, ds.dims)] << " ";
         std::cout << std::endl;
     }
@@ -90,6 +91,17 @@ void printCentroids(std::ostream &os, const kmeans::Dataset &ds, const kmeans::L
     }
 }
 
+void printLabels(std::ostream &os, const kmeans::Dataset &ds, const kmeans::Labels &ls)
+{ 
+
+    os << "clusters:";
+    
+    for (int i = 0; i < ds.n; ++i)
+        os << " " << ls.labels[i];
+    
+    os << std::endl;
+    
+}
 
 int main(int argc, char **argv)
 {
@@ -110,18 +122,19 @@ int main(int argc, char **argv)
     std::cout << "gpu: " << BSTR(options.gpu) << std::endl;
     std::cout << "gpu shared memory: " << BSTR(options.gpu_shmem) << std::endl;
     std::cout << "kmeans++: " << BSTR(options.kmeans_pp) << std::endl;
-#endif 
-    kmeans::Dataset ds = kmeans::buildDataset(options); 
+#endif
+    kmeans::Dataset ds = kmeans::buildDataset(options);
 
-    kmeans::Labels ls; 
+    kmeans::Labels ls;
     if (options.gpu || options.gpu_shmem)
         ls = kmeans::kmeansGPU(ds, options);
-    else 
+    else
         ls = kmeans::kmeansSequential(ds, options);
 
-#ifdef DEBUG
-    printCentroids(std::cout, ds, ls);
-#endif 
+    if (options.print_centroids) 
+        printCentroids(std::cout, ds, ls);
+    else 
+        printLabels(std::cout, ds, ls);
 
     return 0;
 }

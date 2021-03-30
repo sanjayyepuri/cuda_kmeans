@@ -7,7 +7,7 @@
 #include <cuda_runtime.h>
 
 #define BSTR(b) (b ? "true" : "false")
-#define DEBUG
+// #define DEBUG
 
 #define I(r, c, D) (D*r + c)
 
@@ -39,7 +39,7 @@ namespace kmeans
         int rand_seed = 8675309;
 
         char *input_file;
-        float threshold = 1e-10;
+        float threshold = 1e-6;
 
         bool print_centroids = false;
         bool gpu = false;
@@ -60,6 +60,10 @@ namespace kmeans
         float *centroids;
         int *labels;
     };
+
+    float rand_float();
+    void kmeansInitCentroids(Dataset &ds);
+    void kmeansppInitCentroids(Dataset &ds);
 
     // return a dataset initalized with random centroids
     Dataset buildDataset(Args &options);

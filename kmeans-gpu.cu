@@ -7,7 +7,7 @@ namespace kmeans
 {
     namespace kcuda
     {
-        __device__ float distance(float *a, float *b, size_t dims)
+        static __device__ float distance(float *a, float *b, size_t dims)
         {
             float dist = 0;
             for (int i = 0; i < dims; ++i)
@@ -119,6 +119,30 @@ namespace kmeans
             int ind = blockIdx.x * blockDim.x + threadIdx.x;
             centroids[ind] /= counts[ind / D];
         }
+
+        __global__ void checkConvergence(float *old_c, float *new_c, float *conv, int K, int D)
+        {
+            __shared__ float accum[1];
+            
+            int bid = blockIdx.x;
+            int tid = threadIdx.x; 
+
+            if (tid == 0) *accum = 0;
+            __syncthreads();
+
+            int index = bid * blockDim.x + tid; 
+
+            if (index < K * D) {
+                float diff  = old_c[index] - new_c[index];
+                atomicAdd(accum, diff*diff);
+            }
+
+            __syncthreads();
+
+            if (tid == 0) {
+                atomicAdd(conv, *accum);
+            }
+        }
     }
 
     Labels kmeansGPU(const Dataset &ds, const Args &options)
@@ -135,7 +159,7 @@ namespace kmeans
         copyCentroids(ds, l.centroids);
 
         // double buffer centroids
-        float *cuda_dataset, **cuda_centroids, *cuda_counts, *centroids[2];
+        float *cuda_dataset, **cuda_centroids, *cuda_counts, *centroids[2], *cuda_conv;
         int *cuda_labels;
 
         CUDA_ERR(cudaMalloc(&cuda_dataset, ds_size));
@@ -144,6 +168,7 @@ namespace kmeans
         CUDA_ERR(cudaMalloc(&cuda_centroids, sizeof(float *) * 2));
         CUDA_ERR(cudaMalloc(&cuda_counts, sizeof(float) * K));
         CUDA_ERR(cudaMalloc(&cuda_labels, sizeof(int) * N));
+        CUDA_ERR(cudaMalloc(&cuda_conv, sizeof(float)));
 
         // copy dataset to device
         CUDA_ERR(cudaMemcpy(cuda_dataset, ds.vecs, ds_size,
@@ -156,12 +181,27 @@ namespace kmeans
         const size_t N_THREADS = 1024;
         dim3 threads(N_THREADS);
         dim3 blocks((N + N_THREADS - 1) / N_THREADS);
+        dim3 blocks_conv((K*D + N_THREADS - 1) / N_THREADS);
 
         std::vector<double> ms_per_iter;
         int iter = 0;
         while (iter++ < options.max_iters)
         {
             TIME_EXEC(ms_per_iter, {
+                
+                // check for convergence
+                CUDA_ERR(cudaMemset(cuda_conv, 0, sizeof(float)));
+                kcuda::checkConvergence<<<blocks_conv, threads>>>(centroids[0], centroids[1], cuda_conv, K, D);
+                CUDA_ERR(cudaPeekAtLastError());
+                CUDA_ERR(cudaDeviceSynchronize());
+
+                float conv;
+                CUDA_ERR(cudaMemcpy(&conv, cuda_conv, sizeof(float), cudaMemcpyDeviceToHost));
+
+                if (std::sqrt(conv) <= options.threshold){
+                    goto done; 
+                }
+
                 // zero second buffer and counts
                 CUDA_ERR(cudaMemset(centroids[iter % 2], 0, centroid_size));
                 CUDA_ERR(cudaMemset(cuda_counts, 0, sizeof(float) * K));
@@ -188,7 +228,7 @@ namespace kmeans
                 CUDA_ERR(cudaDeviceSynchronize());
             })
         }
-
+done:
         printTimeMs(ms_per_iter);
 
         // copy results back to host
